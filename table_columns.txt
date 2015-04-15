@@ -1,0 +1,27 @@
+service_date      | character varying(20) |           | extended  
+vehicle_number    | integer               |           | plain
+leave_time        | integer               |           | plain
+train             | integer               |           | plain
+badge             | integer               |           | plain
+route_number      | integer               |           | plain
+direction         | integer               |           | plain
+service_key       | character(1)          |           | extended
+trip_number       | integer               |           | plain
+stop_time         | integer               |           | plain
+arrive_time       | integer               |           | plain
+dwell             | integer               |           | plain
+location_id       | integer               |           | plain
+door              | integer               |           | plain
+lift              | integer               |           | plain
+ons               | integer               |           | plain
+offs              | integer               |           | plain
+estimated_load    | integer               |           | plain
+maximum_speed     | integer               |           | plain
+train_mileage     | double precision      |           | plain
+pattern_distance  | double precision      |           | plain
+location_distance | double precision      |           | plain
+x_coordinate      | double precision      |           | plain
+y_coordinate      | double precision      |           | plain
+data_source       | integer               |           | plain
+schedule_status   | integer               |           | plain
+
