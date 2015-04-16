@@ -4,7 +4,9 @@ import postgresql
 import pprint
 import psycopg2
 import psycopg2.extras
+import re
 import sys
+from operator import itemgetter
 
 connection = None
 cursor = None
@@ -64,6 +66,12 @@ def fetchRouteBetweenParam(route, param, minValue, maxValue):
     rows = cursor.fetchall()
     return rows
 
+# Fetches all rows where a route stops at a location between two times.
+def fetchRouteStopWindow(route, location, startTime, endTime):
+    cursor.execute('SELECT * FROM {} WHERE route_number = {} AND location_id = {} AND stop_time BETWEEN {} AND {}'.format(table, route, location, startTime, endTime))
+    rows = cursor.fetchall()
+    return rows
+
 # Returns a 'sequence number', a unique bus identifier, from a location_id, a
 # route number, and a scheduled stop_time.
 def fetchSequenceNumberFromStop(location, route, time):
@@ -73,6 +81,7 @@ def fetchSequenceNumberFromStop(location, route, time):
             'service_key': row['service_key'], 'trip_number': row['trip_number']}
     return sequence
 
+# Returns every row representing a sequence.
 def fetchTripFromSequence(sequenceNumber):
     cursor.execute('SELECT * FROM {} WHERE route_number = {} AND direction = {} AND service_key = \'{}\' and trip_number = {}'.format(table, sequenceNumber['route_number'],
         sequenceNumber['direction'], sequenceNumber['service_key'],
@@ -80,8 +89,8 @@ def fetchTripFromSequence(sequenceNumber):
     rows = cursor.fetchall()
     return rows
 
-# Parses a 'sequence number', a unique bus identifier, from a location_id, a
-# route number, and a scheduled stop_time.
+# Parses a 'sequence number', a unique bus identifier, from a location_id,
+# a route number, and a scheduled stop_time.
 def parseSequenceNumber(row):
     sequence_number = str(row['route_number']) + str(row['direction']) + \
             str(row['service_key']) + str(row['trip_number'])
@@ -89,23 +98,59 @@ def parseSequenceNumber(row):
             'service_key': row['service_key'], 'trip_number': row['trip_number'],
             'sequence_number': sequence_number}
     return sequence
+
+# Parses a time string of format "HH:MM" and returns an int of seconds.
+def parseTimeToSeconds(string):
+    regTime = re.split(r"[:,]", string)
+    return int(regTime[0]) * 3600 + int(regTime[1]) * 60
+
+# Converts an int of seconds into a string of time of format "HH:MM"
+def parseSecondsToTime(int):
+    hours = 0
+    minutes = 0
+    seconds = int
+    while seconds >= 3600:
+        hours += 1
+        seconds -= 3600
+    while seconds > 60:
+        minutes += 1
+        seconds -= 60
+    return str(hours) + ":" + '{0:02}'.format(minutes)
+
+def printMaxLoadList(route, startStop, endStop, startTime, endTime):
+    sequence_numbers = []
+    trips = []
+    departures = fetchRouteStopWindow(route, startStop, startTime, endTime)
+    for stop in departures:
+        sequence_numbers.append(parseSequenceNumber(stop))
+    for trip in sequence_numbers:
+        segment = calcSequenceSegment(fetchTripFromSequence(trip), startStop, endStop)
+        sortedSeg = sorted(segment, key = lambda stop: (stop['stop_time']))
+        trips.append({'stop_time': sortedSeg[0]['stop_time'],
+            'max_load': calcMaxLoad(sortedSeg)})
+    sortedTrips = sorted(trips, key = lambda stop: (stop['stop_time']))
+    print("STOP TIME\t MAX LOAD")
+    for departure in sortedTrips:
+        print(parseSecondsToTime(departure['stop_time']), "|\t\t", departure['max_load'])
         
 def main():
     establishConnection()
 
-    row = fetchMatchParam('leave_time', 18574)
-    row = row[0]
-    sequence = fetchTripFromSequence(parseSequenceNumber(row))
-    sequence = calcSequenceSegment(sequence, 9030, 5009)
-    for stop in sequence:
-        print(stop['leave_time'], "\t", stop['location_id'])
-    print("Max Load: " + str(calcMaxLoad(sequence)))
-    
+    if len(sys.argv) == 6:
+        userRoute = int(sys.argv[1])
+        userDepartStop = int(sys.argv[2])
+        userArriveStop = int(sys.argv[3])
+        userStartTime = parseTimeToSeconds(sys.argv[4])
+        userEndTime = parseTimeToSeconds(sys.argv[5])
+        printMaxLoadList(userRoute, userDepartStop, userArriveStop, \
+            userStartTime, userEndTime)
+    else:
+        print("Please use format ./route.py [Route] [StartStop] [EndStop]",
+                "[StartTime HH:MM] [EndTime]")
+        print("\n\te.g., ./route.py 15 9030 5009 14:30 16:30\n\n")
     
     if connection:
         connection.close()
     
-    print("\nSuccess!\n")
-
 if __name__ == "__main__":
     main()
