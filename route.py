@@ -120,6 +120,7 @@ def parseSecondsToTime(int):
 def printMaxLoadList(route, startStop, endStop, startTime, endTime):
     sequence_numbers = []
     trips = []
+    test = 0
     departures = fetchRouteStopWindow(route, startStop, startTime, endTime)
     for stop in departures:
         sequence_numbers.append(parseSequenceNumber(stop))
@@ -128,10 +129,43 @@ def printMaxLoadList(route, startStop, endStop, startTime, endTime):
         sortedSeg = sorted(segment, key = lambda stop: (stop['stop_time']))
         trips.append({'stop_time': sortedSeg[0]['stop_time'],
             'max_load': calcMaxLoad(sortedSeg)})
+
     sortedTrips = sorted(trips, key = lambda stop: (stop['stop_time']))
-    print("STOP TIME\t MAX LOAD")
-    for departure in sortedTrips:
-        print(parseSecondsToTime(departure['stop_time']), "|\t\t", departure['max_load'])
+    print("\nSTOP TIME\t MAX LOAD")
+    for trip in sortedTrips:
+        print(parseSecondsToTime(trip['stop_time']), "|\t\t", trip['max_load'])
+
+# Pretty prints a row of data.
+def printRow(row):
+    print("Row ID:", row['id'])
+    print("Service Data:", row['service_date'])
+    print("Vehicle Number:", row['vehicle_number'])
+    print("Leave Time:", row['leave_time'])
+    print("Train:", row['train'])
+    print("Badge:", row['badge'])
+    print("Route Number:", row['route_number'])
+    print("Direction:", row['direction'])
+    print("Service Key:", row['service_key'])
+    print("Trip Number:", row['trip_number'])
+    print("Stop Time:", row['stop_time'])
+    print("Arrive Time:", row['arrive_time'])
+    print("Dwell:", row['dwell'])
+    print("Location ID:", row['location_id'])
+    print("Door:", row['door'])
+    print("Lift:", row['lift'])
+    print("Ons:", row['ons'])
+    print("Offs:", row['offs'])
+    print("Estimated Load:", row['estimated_load'])
+    print("Maximum Speed:", row['maximum_speed'])
+    print("Train Mileage:", row['train_mileage'])
+    print("Pattern Distance:", row['pattern_distance'])
+    print("Location Distance:", row['location_distance'])
+    print("X Coordinate:", row['x_coordinate'])
+    print("Y Coordinate:", row['y_coordinate'])
+    print("Data Source:", row['data_source'])
+    print("Schedule Status:", row['schedule_status'])
+    print("")
+
         
 def main():
     establishConnection()
@@ -142,6 +176,7 @@ def main():
         userArriveStop = int(sys.argv[3])
         userStartTime = parseTimeToSeconds(sys.argv[4])
         userEndTime = parseTimeToSeconds(sys.argv[5])
+
         printMaxLoadList(userRoute, userDepartStop, userArriveStop, \
             userStartTime, userEndTime)
     else:
