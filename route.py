@@ -34,6 +34,9 @@ def calcMaxLoad(sequence):
             maxLoad = row['estimated_load']
     return maxLoad
 
+def calcSequenceNumber(row):
+    return fetchSequenceNumberFromStop(row['location_id'], row['route_number'], row['stop_time'])
+
 # Filters sequence based on start stop and end stop.
 def calcSequenceSegment(sequence, startStop, endStop):
     startTime = 0
@@ -124,11 +127,14 @@ def printMaxLoadList(route, startStop, endStop, startTime, endTime):
     departures = fetchRouteStopWindow(route, startStop, startTime, endTime)
     for stop in departures:
         sequence_numbers.append(parseSequenceNumber(stop))
-    for trip in sequence_numbers:
-        segment = calcSequenceSegment(fetchTripFromSequence(trip), startStop, endStop)
+    for sequence_number in sequence_numbers:
+        segment = calcSequenceSegment(fetchTripFromSequence(sequence_number), startStop, endStop)
         sortedSeg = sorted(segment, key = lambda stop: (stop['stop_time']))
         trips.append({'stop_time': sortedSeg[0]['stop_time'],
             'max_load': calcMaxLoad(sortedSeg)})
+        if not test:
+            printRow(segment[0])
+            test += 1
 
     sortedTrips = sorted(trips, key = lambda stop: (stop['stop_time']))
     print("\nSTOP TIME\t MAX LOAD")
@@ -164,6 +170,7 @@ def printRow(row):
     print("Y Coordinate:", row['y_coordinate'])
     print("Data Source:", row['data_source'])
     print("Schedule Status:", row['schedule_status'])
+    print("Leg Time:", row['leg_time'])
     print("")
 
         
