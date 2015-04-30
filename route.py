@@ -190,7 +190,7 @@ def main():
         print("Please use format ./route.py [Route] [StartStop] [EndStop]",
                 "[StartTime HH:MM] [EndTime]")
         print("\n\te.g., ./route.py 15 9030 5009 14:30 16:30\n\n")
-    
+
     if connection:
         connection.close()
     
